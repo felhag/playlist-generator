@@ -1,0 +1,16 @@
+Seeds
+
+<div>
+    <textarea (change)="update($any($event.target).value)"></textarea>
+</div>
+
+<div>
+    <input placeholder="Target">
+</div>
+
+<button type="button" (click)="generate()">Generate</button>
+
+<div *ngFor="let recommendation of generated | async">
+    {{recommendation.artist}} - {{recommendation.track}} ({{recommendation.id}})
+<!--    <pre>{{seed.name | async | json}}</pre>-->
+</div>

@@ -1,4 +1,6 @@
 import os
+
+import flask
 import spotipy
 import uuid
 from flask import Flask, session, request, redirect
@@ -29,7 +31,7 @@ def get_api():
                                        cache_handler=cache_handler)
 
 
-@app.route('/')
+@app.route('/api/auth')
 def index():
     if not session.get('uuid'):
         # Step 1. Visitor is unknown, give random ID
@@ -47,12 +49,13 @@ def index():
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        return redirect('/')
+        return flask.Response(), 200
 
     if not auth_manager.validate_token(cache_handler.get_cached_token()):
         # Step 2. Display sign in link when no token
-        auth_url = auth_manager.get_authorize_url()
-        return f'<h2><a href="{auth_url}">Sign in</a></h2>'
+        resp = flask.Response('Unauthorized')
+        resp.headers['Location'] = auth_manager.get_authorize_url()
+        return resp, 401
 
     # Step 4. Signed in, display data
     spotify = spotipy.Spotify(auth_manager=auth_manager)
@@ -74,31 +77,50 @@ def sign_out():
     return redirect('/')
 
 
-@app.route('/playlists')
-def playlists():
+@app.route('/api/playlist/<playlist_id>')
+def playlists(playlist_id):
     auth_manager = get_api()
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+    playlist = sp.playlist(playlist_id)
+    items = playlist["tracks"]["items"]
+    return {
+        "name": playlist['name'],
+        "items": list(map(lambda item: {
+            "id": item["track"]["id"],
+            "artist": item['track']['artists'][0]['name'],
+            "track": item["track"]["name"],
+        }, items))
+    }
 
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    return spotify.current_user_playlists()
 
-
-@app.route('/currently_playing')
-def currently_playing():
+@app.route('/api/generate', methods=['POST'])
+def generate():
     auth_manager = get_api()
+    sp = spotipy.Spotify(auth_manager=auth_manager)
 
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    track = spotify.current_user_playing_track()
-    if not track is None:
-        return track
-    return "No track currently playing."
+    uris = []
 
+    for playlist_id in request.get_json():
+        playlist = sp.playlist(playlist_id)
+        items = playlist["tracks"]["items"]
+        seeds = list(map(lambda item: item["track"]["id"], items))
 
-@app.route('/current_user')
-def current_user():
-    auth_manager = get_api()
+        print(seeds)
 
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    return spotify.current_user()
+        for i in range(5, 25 + 1, 5):
+            recomms = sp.recommendations(seed_tracks=seeds[i - 5:i], limit=25)
+
+            for track in recomms["tracks"]:
+                # contains = (track['artists'][0]['name'], track['name']) in exclusions
+                # if not contains:
+                print('#', i, track['artists'][0]['name'], ' - ', track['name'])
+                uris.append({
+                    "artist": track['artists'][0]['name'],
+                    "track": track['name'],
+                    "id": track['uri']
+                })
+
+    return {"recommendations": uris}
 
 
 '''
