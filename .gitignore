@@ -5,3 +5,4 @@
 /playlist-generator-web/node_modules
 /.flask_session/
 /.cache/
+/.lfm-cache/

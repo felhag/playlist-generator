@@ -1,5 +1,4 @@
 import http
-import os
 from urllib.parse import urlparse, parse_qs
 
 import flask
@@ -8,6 +7,7 @@ import uuid
 from flask import Flask, session, request, redirect
 from flask_session import Session
 from conf import *
+from lastfm import *
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
@@ -100,6 +100,8 @@ def generate():
     auth_manager = get_api()
     sp = spotipy.Spotify(auth_manager=auth_manager)
 
+    exclusions = list(map(lambda t: (t['artist'].lower(), t['track'].lower()), get_exclusions('wildcatnl')))
+
     uris = []
 
     for playlist_id in request.get_json():
@@ -113,14 +115,14 @@ def generate():
             recomms = sp.recommendations(seed_tracks=seeds[i - 5:i], limit=25)
 
             for track in recomms["tracks"]:
-                # contains = (track['artists'][0]['name'], track['name']) in exclusions
-                # if not contains:
-                print('#', i, track['artists'][0]['name'], ' - ', track['name'])
-                uris.append({
-                    "artist": track['artists'][0]['name'],
-                    "track": track['name'],
-                    "id": track['uri']
-                })
+                contains = (track['artists'][0]['name'].lower(), track['name'].lower()) in exclusions
+                print('#', 'true :' if contains else 'false:', track['artists'][0]['name'], '-', track['name'])
+                if not contains:
+                    uris.append({
+                        "artist": track['artists'][0]['name'],
+                        "track": track['name'],
+                        "id": track['uri']
+                    })
 
     return {"recommendations": uris}
 
@@ -140,6 +142,7 @@ def persist():
         sp.playlist_add_items(playlist_id=playlist_id, items=chunk)
 
     return '', http.HTTPStatus.NO_CONTENT
+
 
 '''
 Following lines allow application to be run more conveniently with
