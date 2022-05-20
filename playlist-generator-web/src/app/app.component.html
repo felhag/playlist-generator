@@ -5,10 +5,11 @@ Seeds
 </div>
 
 <div>
-    <input placeholder="Target">
+    <input placeholder="Target" [(ngModel)]="target">
 </div>
 
-<button type="button" (click)="generate()">Generate</button>
+<button type="button" (click)="generate()">Get recommendations</button>
+<button type="button" (click)="persist()">Add to target</button>
 
 <div *ngFor="let recommendation of generated | async">
     {{recommendation.artist}} - {{recommendation.track}} ({{recommendation.id}})

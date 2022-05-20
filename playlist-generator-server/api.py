@@ -1,4 +1,6 @@
+import http
 import os
+from urllib.parse import urlparse, parse_qs
 
 import flask
 import spotipy
@@ -43,7 +45,7 @@ def index():
                                                client_secret=clientSecret,
                                                redirect_uri=redirectUrl,
                                                cache_handler=cache_handler,
-                                               scope='user-read-currently-playing playlist-modify-private',
+                                               scope='playlist-modify-private playlist-modify-public user-read-currently-playing',
                                                show_dialog=True)
 
     if request.args.get("code"):
@@ -122,6 +124,22 @@ def generate():
 
     return {"recommendations": uris}
 
+
+@app.route('/api/persist', methods=['POST'])
+def persist():
+    auth_manager = get_api()
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
+    data = request.get_json()
+    uris = data.get('uris')
+    pid = str(data.get('playlist_id'))
+    playlist_id = pid if not pid.startswith('https://') else parse_qs(urlparse(pid).query)['si'][0]
+
+    for i in range(0, len(uris), 100):
+        chunk = uris[i:i + 100]
+        sp.playlist_add_items(playlist_id=playlist_id, items=chunk)
+
+    return '', http.HTTPStatus.NO_CONTENT
 
 '''
 Following lines allow application to be run more conveniently with

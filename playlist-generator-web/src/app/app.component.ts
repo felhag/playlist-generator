@@ -22,6 +22,7 @@ export class AppComponent implements OnInit {
     baseUrl = '/api';
     seeds: Playlist[] = [];
     generated = new BehaviorSubject<Recommendation[]>([]);
+    target = '';
 
     constructor(private http: HttpClient) {
     }
@@ -62,6 +63,15 @@ export class AppComponent implements OnInit {
     generate() {
         this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/generate`, this.seeds.map(s => s.id)).subscribe(result => {
             this.generated.next([...this.generated.value, ...result.recommendations]);
+        });
+    }
+
+    persist() {
+        this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/persist`, {
+            playlist_id: this.target,
+            uris: this.generated.value.map(g => g.id)
+        }).subscribe(result => {
+
         });
     }
 }
