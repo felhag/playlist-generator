@@ -1,4 +1,33 @@
-textarea {
-  width: 1000px;
-  height: 150px;
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 75%;
+}
+
+@media screen and (max-height: 992px) {
+  :host {
+    min-height: 100%;
+  }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .mat-card {
+    margin: 40px;
+
+    .mat-form-field {
+      margin: 0 16px;
+      width: calc(100% - 16px);
+    }
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .container {
+    max-width: 1200px;
+  }
 }

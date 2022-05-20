@@ -1,1 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$light-app-theme: mat.define-light-theme((
+        color: (
+                primary: mat.define-palette(mat.$indigo-palette),
+                accent: mat.define-palette(mat.$pink-palette),
+                warn: mat.define-palette(mat.$red-palette)
+        )
+));
+$dark-app-theme: mat.define-dark-theme((
+        color: (
+                primary: mat.define-palette(mat.$cyan-palette),
+                accent: mat.define-palette(mat.$blue-gray-palette),
+                warn: mat.define-palette(mat.$amber-palette)
+        )
+));
+
+@media (prefers-color-scheme: light) {
+  @include mat.all-component-themes($light-app-theme);
+  body {
+    background-color: #f9f9f9;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @include mat.all-component-colors($dark-app-theme);
+
+  body {
+    background-color: #303030;
+  }
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin: 0;
+}

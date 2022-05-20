@@ -1,17 +1,54 @@
-Seeds
+<div class="container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>1. Exclusions</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <mat-form-field>
+                <mat-label>Lastfm username</mat-label>
+                <input matInput>
+            </mat-form-field>
 
-<div>
-    <textarea (change)="update($any($event.target).value)"></textarea>
-</div>
+            <button mat-flat-button>Load exclusions</button>
+        </mat-card-content>
+    </mat-card>
 
-<div>
-    <input placeholder="Target" [(ngModel)]="target">
-</div>
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>2. Seeds</mat-card-title>
+        </mat-card-header>
 
-<button type="button" (click)="generate()">Get recommendations</button>
-<button type="button" (click)="persist()">Add to target</button>
+        <mat-card-content>
+            <mat-form-field>
+                <mat-label>Seeds</mat-label>
+                <textarea matInput (change)="update($any($event.target).value)"></textarea>
+            </mat-form-field>
 
-<div *ngFor="let recommendation of generated | async">
-    {{recommendation.artist}} - {{recommendation.track}} ({{recommendation.id}})
-<!--    <pre>{{seed.name | async | json}}</pre>-->
+            <button mat-flat-button>Load seeds</button>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>3. Target</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+            <mat-form-field>
+                <mat-label>Target</mat-label>
+                <input matInput placeholder="Target" [(ngModel)]="target">
+            </mat-form-field>
+
+            <button mat-flat-button>Save to playlist</button>
+        </mat-card-content>
+    </mat-card>
+
+
+<!--    <button type="button" (click)="generate()">Get recommendations</button>-->
+<!--    <button type="button" (click)="persist()">Add to target</button>-->
+
+<!--    <div *ngFor="let recommendation of generated | async">-->
+<!--        {{recommendation.artist}} - {{recommendation.track}} ({{recommendation.id}})-->
+<!--    &lt;!&ndash;    <pre>{{seed.name | async | json}}</pre>&ndash;&gt;-->
+<!--    </div>-->
 </div>

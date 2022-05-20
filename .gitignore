@@ -1,8 +1,9 @@
 /.idea/
 *.iml
-/playlist-generator-server/conf.py
-/playlist-generator-server/.cache
-/playlist-generator-web/node_modules
 /.flask_session/
 /.cache/
 /.lfm-cache/
+/playlist-generator-server/conf.py
+/playlist-generator-server/.cache
+/playlist-generator-web/node_modules
+/playlist-generator-web/.angular/
