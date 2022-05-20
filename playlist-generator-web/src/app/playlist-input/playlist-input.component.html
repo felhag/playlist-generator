@@ -1,0 +1,23 @@
+<mat-chip-list #chipList>
+    <input matInput
+           [formControl]="control"
+           [matChipInputFor]="chipList"
+           [placeholder]="placeholder"
+           (blur)="onTouch()">
+    <ng-container *ngIf="state | async as loading">
+        <mat-spinner *ngIf="loading === 'loading'" [diameter]="18"></mat-spinner>
+        <mat-chip>
+            <mat-icon>error_outline</mat-icon>
+            Cannot resolved playlist
+            <button matChipRemove (click)="clear()">
+                <mat-icon>cancel</mat-icon>
+            </button>
+        </mat-chip>
+    </ng-container>
+    <mat-chip *ngIf="playlist | async as s" [hidden]="!!(state | async)">
+        {{s.name}} ({{s.items}} tracks)
+        <button matChipRemove (click)="clear()">
+            <mat-icon>cancel</mat-icon>
+        </button>
+    </mat-chip>
+</mat-chip-list>

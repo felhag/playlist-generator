@@ -1,14 +1,8 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable, of } from 'rxjs';
-
-interface Playlist {
-    id: string;
-    name: Observable<any>
-}
 
 interface Recommendation {
     artist: string;
@@ -19,7 +13,8 @@ interface Recommendation {
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit {
     displayedColumns: string[] = ['select', 'artist', 'track', 'id'];
@@ -27,9 +22,12 @@ export class AppComponent implements OnInit {
     dataSource = new MatTableDataSource<Recommendation>();
 
     baseUrl = '/api';
-    seeds: Playlist[] = [];
     target = '';
-    username = new FormControl();
+
+    group = new FormGroup({
+        username: new FormControl(),
+        seed: new FormControl('')
+    });
 
     constructor(private http: HttpClient) {
     }
@@ -47,31 +45,8 @@ export class AppComponent implements OnInit {
         });
     }
 
-    update(value: string): void {
-        this.seeds = (value || '').split(/\s+/).map(v => this.sanitize(v)).filter(v => !!v).map(id => this.getPlayList(id));
-    }
-
-    private sanitize(value: string): string {
-        if (value.startsWith('http')) {
-            return value.substring(value.lastIndexOf('/') + 1, value.indexOf('?'));
-        } else {
-            return value;
-        }
-    }
-
-    private getPlayList(id: string): Playlist {
-        return {
-            id,
-            name: of()//this.http.get(`${this.baseUrl}/playlist/${id}`)
-        }
-    }
-
     generate() {
-        const body = {
-            seeds: this.seeds.map(s => s.id),
-            username: this.username.value
-        }
-        this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/generate`, body).subscribe(result => {
+        this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/generate`, this.group.getRawValue()).subscribe(result => {
             const data = this.dataSource.data;
             data.push(...result.recommendations);
             this.dataSource.data = data;
@@ -99,6 +74,6 @@ export class AppComponent implements OnInit {
     }
 
     artistUrl(elem: Recommendation): string {
-        return `https://www.last.fm/user/${this.username.value}/library/music/${encodeURIComponent(elem.artist)}`
+        return `https://www.last.fm/user/${this.group.controls.username.value}/library/music/${encodeURIComponent(elem.artist)}`
     }
 }

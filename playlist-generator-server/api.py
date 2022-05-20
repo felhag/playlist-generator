@@ -62,7 +62,7 @@ Session(app)
 
 @app.route('/api/playlist/<playlist_id>')
 def playlists(playlist_id):
-    spotify.get_playlists(playlist_id)
+    return spotify.get_playlists(playlist_id)
 
 
 @app.route('/api/generate', methods=['POST'])

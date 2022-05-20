@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" [formGroup]="group">
     <mat-card>
         <mat-card-header>
             <mat-card-title>1. Exclusions</mat-card-title>
@@ -6,7 +6,7 @@
         <mat-card-content>
             <mat-form-field appearance="outline">
                 <mat-label>Lastfm username</mat-label>
-                <input matInput [formControl]="username">
+                <input #username matInput formControlName="username">
                 <a mat-icon-button matSuffix target="_blank" [disabled]="!username.value" [href]="'https://www.last.fm/user/' + username.value">
                     <mat-icon>open_in_new</mat-icon>
                 </a>
@@ -20,9 +20,9 @@
         </mat-card-header>
 
         <mat-card-content>
-            <mat-form-field>
+            <mat-form-field appearance="outline">
                 <mat-label>Seed</mat-label>
-                <input matInput (change)="update($any($event.target).value)">
+                <app-playlist-input formControlName="seed"></app-playlist-input>
             </mat-form-field>
 
             <button mat-flat-button (click)="generate()">Load recommendations</button>
@@ -77,21 +77,12 @@
         </mat-card-header>
 
         <mat-card-content>
-            <mat-form-field>
+            <mat-form-field appearance="outline">
                 <mat-label>Target</mat-label>
-                <input matInput placeholder="Target" [(ngModel)]="target">
+                <app-playlist-input formControlName="target"></app-playlist-input>
             </mat-form-field>
 
-            <button mat-flat-button>Save to playlist</button>
+            <button mat-flat-button (click)="persist()">Save to playlist</button>
         </mat-card-content>
     </mat-card>
-
-
-<!--    <button type="button" (click)="generate()">Get recommendations</button>-->
-<!--    <button type="button" (click)="persist()">Add to target</button>-->
-
-<!--    <div *ngFor="let recommendation of generated | async">-->
-<!--        {{recommendation.artist}} - {{recommendation.track}} ({{recommendation.id}})-->
-<!--    &lt;!&ndash;    <pre>{{seed.name | async | json}}</pre>&ndash;&gt;-->
-<!--    </div>-->
 </div>

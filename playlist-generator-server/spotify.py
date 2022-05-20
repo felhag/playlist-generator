@@ -28,12 +28,9 @@ def get_playlists(playlist_id):
     playlist = sp.playlist(playlist_id)
     items = playlist["tracks"]["items"]
     return {
+        "id": playlist['id'],
         "name": playlist['name'],
-        "items": list(map(lambda item: {
-            "id": item["track"]["id"],
-            "artist": item['track']['artists'][0]['name'],
-            "track": item["track"]["name"],
-        }, items))
+        "items": len(items),
     }
 
 
