@@ -1,12 +1,10 @@
 import http
-from urllib.parse import urlparse, parse_qs
 
 import flask
 import spotipy
 import uuid
 from flask import Flask, session, request, redirect
 from flask_session import Session
-from conf import *
 from lastfm import *
 
 app = Flask(__name__)
@@ -108,22 +106,35 @@ def generate():
         playlist = sp.playlist(playlist_id)
         items = playlist["tracks"]["items"]
         seeds = list(map(lambda item: item["track"]["id"], items))
+        total = 0
+        new = 0
 
-        print(seeds)
+        seed_size = 5
+        recom_size = 25
+        target = 100
+        i = seed_size
 
-        for i in range(5, 25 + 1, 5):
-            recomms = sp.recommendations(seed_tracks=seeds[i - 5:i], limit=25)
+        # for i in range(seed_size, recom_size + 1, seed_size):
+        while len(uris) < target and len(seeds) > i:
+            recomms = sp.recommendations(seed_tracks=seeds[i - seed_size:i], limit=recom_size)
+            i = i + seed_size
 
-            for track in recomms["tracks"]:
-                contains = (track['artists'][0]['name'].lower(), track['name'].lower()) in exclusions
-                print('#', 'true :' if contains else 'false:', track['artists'][0]['name'], '-', track['name'])
+            for recom in recomms["tracks"]:
+                artist = recom['artists'][0]['name']
+                track = recom['name']
+                contains = (artist.lower(), track.lower()) in exclusions
+                print('#', 'true :' if contains else 'false:', artist, '-', track)
+                total = total + 1
                 if not contains:
+                    new = new + 1
                     uris.append({
-                        "artist": track['artists'][0]['name'],
-                        "track": track['name'],
-                        "id": track['uri']
+                        "artist": artist,
+                        "track": track,
+                        "id": recom['uri']
                     })
+                    exclusions.append((artist, track))
 
+        print(f'{new}/{total} were new tracks')
     return {"recommendations": uris}
 
 
@@ -135,7 +146,7 @@ def persist():
     data = request.get_json()
     uris = data.get('uris')
     pid = str(data.get('playlist_id'))
-    playlist_id = pid if not pid.startswith('https://') else parse_qs(urlparse(pid).query)['si'][0]
+    playlist_id = pid if not pid.startswith('https://') else pid.split('/')[-1].split('?')[0]
 
     for i in range(0, len(uris), 100):
         chunk = uris[i:i + 100]
