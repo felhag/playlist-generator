@@ -1,6 +1,9 @@
+import { SelectionModel } from '@angular/cdk/collections';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { FormControl } from '@angular/forms';
+import { MatTableDataSource } from '@angular/material/table';
+import { Observable, of } from 'rxjs';
 
 interface Playlist {
     id: string;
@@ -19,10 +22,14 @@ interface Recommendation {
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
+    displayedColumns: string[] = ['select', 'artist', 'track', 'id'];
+    selection = new SelectionModel<Recommendation>(true, []);
+    dataSource = new MatTableDataSource<Recommendation>();
+
     baseUrl = '/api';
     seeds: Playlist[] = [];
-    generated = new BehaviorSubject<Recommendation[]>([]);
     target = '';
+    username = new FormControl();
 
     constructor(private http: HttpClient) {
     }
@@ -33,7 +40,6 @@ export class AppComponent implements OnInit {
         this.http.get(`${this.baseUrl}/auth`, {params}).subscribe({
             next: () => {},
             error: e => {
-                console.log('401', e);
                 if (e.status === 401) {
                     window.location = e.headers.get('Location');
                 }
@@ -61,17 +67,38 @@ export class AppComponent implements OnInit {
     }
 
     generate() {
-        this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/generate`, this.seeds.map(s => s.id)).subscribe(result => {
-            this.generated.next([...this.generated.value, ...result.recommendations]);
+        const body = {
+            seeds: this.seeds.map(s => s.id),
+            username: this.username.value
+        }
+        this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/generate`, body).subscribe(result => {
+            const data = this.dataSource.data;
+            data.push(...result.recommendations);
+            this.dataSource.data = data;
+            this.selection.select(...result.recommendations);
         });
     }
 
     persist() {
         this.http.post<{recommendations: Recommendation[]}>(`${this.baseUrl}/persist`, {
             playlist_id: this.target,
-            uris: this.generated.value.map(g => g.id)
+            uris: this.selection.selected.map(g => g.id)
         }).subscribe(result => {
 
         });
+    }
+
+    /** Selects all rows if they are not all selected; otherwise clear selection. */
+    masterToggle() {
+        if (this.selection.selected.length === this.dataSource.data.length) {
+            this.selection.clear();
+            return;
+        }
+
+        this.selection.select(...this.dataSource.data);
+    }
+
+    artistUrl(elem: Recommendation): string {
+        return `https://www.last.fm/user/${this.username.value}/library/music/${encodeURIComponent(elem.artist)}`
     }
 }

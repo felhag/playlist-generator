@@ -4,12 +4,13 @@
             <mat-card-title>1. Exclusions</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-            <mat-form-field>
+            <mat-form-field appearance="outline">
                 <mat-label>Lastfm username</mat-label>
-                <input matInput>
+                <input matInput [formControl]="username">
+                <a mat-icon-button matSuffix target="_blank" [disabled]="!username.value" [href]="'https://www.last.fm/user/' + username.value">
+                    <mat-icon>open_in_new</mat-icon>
+                </a>
             </mat-form-field>
-
-            <button mat-flat-button>Load exclusions</button>
         </mat-card-content>
     </mat-card>
 
@@ -20,11 +21,53 @@
 
         <mat-card-content>
             <mat-form-field>
-                <mat-label>Seeds</mat-label>
-                <textarea matInput (change)="update($any($event.target).value)"></textarea>
+                <mat-label>Seed</mat-label>
+                <input matInput (change)="update($any($event.target).value)">
             </mat-form-field>
 
-            <button mat-flat-button>Load seeds</button>
+            <button mat-flat-button (click)="generate()">Load recommendations</button>
+
+            <table mat-table [dataSource]="dataSource">
+                <!-- Checkbox Column -->
+                <ng-container matColumnDef="select">
+                    <th mat-header-cell *matHeaderCellDef>
+                        <mat-checkbox (change)="$event ? masterToggle() : null"
+                                      [checked]="selection.selected.length === dataSource.data.length"
+                                      [indeterminate]="selection.selected.length !== dataSource.data.length">
+                        </mat-checkbox>
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                        <mat-checkbox (click)="$event.stopPropagation()"
+                                      (change)="$event ? selection.toggle(row) : null"
+                                      [checked]="selection.isSelected(row)">
+                        </mat-checkbox>
+                    </td>
+                </ng-container>
+                <ng-container matColumnDef="artist">
+                    <th mat-header-cell *matHeaderCellDef> Artist </th>
+                    <td mat-cell *matCellDef="let element">
+                        <a class="regular-text" target="_blank" [href]="artistUrl(element)">
+                            {{element.artist}}
+                        </a>
+                    </td>
+                </ng-container>
+                <ng-container matColumnDef="track">
+                    <th mat-header-cell *matHeaderCellDef> Track </th>
+                    <td mat-cell *matCellDef="let element"> {{element.track}} </td>
+                </ng-container>
+                <ng-container matColumnDef="id">
+                    <th mat-header-cell *matHeaderCellDef> ID </th>
+                    <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"></tr>
+                <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                        No tracks added yet.
+                    </td>
+                </tr>
+            </table>
         </mat-card-content>
     </mat-card>
 
