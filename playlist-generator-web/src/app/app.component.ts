@@ -1,16 +1,11 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
-import { Playlist } from './resource.service';
-
-interface Recommendation {
-  artist: string;
-  track: string;
-  id: string;
-}
+import { Observable, Subject } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
+import { ResourceService, Login, Recommendation } from './resource.service';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +14,8 @@ interface Recommendation {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit {
+  login = new Subject<Login | undefined>();
+  loginObs!: Observable<Login | undefined>;
   displayedColumns: string[] = ['select', 'artist', 'track', 'id'];
   selection = new SelectionModel<Recommendation>(true, []);
   dataSource = new MatTableDataSource<Recommendation>();
@@ -33,21 +30,20 @@ export class AppComponent implements OnInit {
     target: new FormControl('', Validators.required)
   });
 
-  constructor(private http: HttpClient, private snackbar: MatSnackBar) {
+  constructor(private resource: ResourceService, private snackbar: MatSnackBar) {
   }
 
   ngOnInit(): void {
-    const code = new URLSearchParams(window.location.search).get('code');
-    const params = code ? new HttpParams().set('code', code) : new HttpParams();
-    this.http.get(`${this.baseUrl}/auth`, {params}).subscribe({
-      next: () => {
-      },
-      error: e => {
-        if (e.status === 401) {
-          window.location = e.headers.get('Location');
-        }
-      }
-    });
+    this.doLogin();
+    this.loginObs = this.login.asObservable().pipe(shareReplay());
+  }
+
+  doLogin(): void {
+    this.resource.login().subscribe(l => this.login.next(l));
+  }
+
+  logout(): void {
+    this.resource.logout().subscribe(() => this.login.next(undefined));
   }
 
   generate() {
@@ -56,11 +52,11 @@ export class AppComponent implements OnInit {
       src.markAllAsTouched();
       return;
     }
-    this.http.post<{ recommendations: Recommendation[] }>(`${this.baseUrl}/generate`, src.getRawValue()).subscribe(result => {
+    this.resource.generate(src.getRawValue()).subscribe(result => {
       const data = this.dataSource.data;
-      data.push(...result.recommendations);
+      data.push(...result);
       this.dataSource.data = data.filter((r, idx, self) => self.findIndex(i => i.id === r.id) === idx);
-      this.selection.select(...result.recommendations);
+      this.selection.select(...result);
     });
   }
 
@@ -71,10 +67,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.http.post<Playlist>(`${this.baseUrl}/persist`, {
-      playlist_id: target.value,
-      uris: this.selection.selected.map(g => g.id)
-    }).subscribe(playlist => {
+    this.resource.persist(target.value, this.selection.selected.map(g => g.id)).subscribe(playlist => {
       this.snackbar.open(`Added ${this.selection.selected.length} tracks to ${playlist.name}`, 'Open', { duration: 5000 })
         .onAction()
         .subscribe(() => window.open(playlist.url));

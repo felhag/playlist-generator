@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import spotipy
 import conf
@@ -15,16 +16,42 @@ def session_cache_path():
 
 def get_api():
     cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
+    auth_manager = spotipy.oauth2.SpotifyOAuth(client_id=conf.clientId,
+                                               client_secret=conf.clientSecret,
+                                               redirect_uri=conf.redirectUrl,
+                                               cache_handler=cache_handler)
+    return spotipy.Spotify(auth_manager=auth_manager)
+
+
+def login():
+    if not session.get('uuid'):
+        session['uuid'] = str(uuid.uuid4())
+
+    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=session_cache_path())
 
     return spotipy.oauth2.SpotifyOAuth(client_id=conf.clientId,
                                        client_secret=conf.clientSecret,
                                        redirect_uri=conf.redirectUrl,
-                                       cache_handler=cache_handler)
+                                       cache_handler=cache_handler,
+                                       scope='playlist-modify-private playlist-modify-public user-read-currently-playing',
+                                       show_dialog=True)
+
+
+def logout():
+    try:
+        # Remove the CACHE file (.cache-test) so that a new user can authorize.
+        os.remove(session_cache_path())
+        session.clear()
+    except OSError as e:
+        print("Error: %s - %s." % (e.filename, e.strerror))
+
+
+def me(auth_manager):
+    return spotipy.Spotify(auth_manager=auth_manager).me()
 
 
 def get_playlists(playlist_id):
-    auth_manager = get_api()
-    sp = spotipy.Spotify(auth_manager=auth_manager)
+    sp = get_api()
     playlist = sp.playlist(playlist_id)
     items = playlist["tracks"]["items"]
     return {
@@ -36,8 +63,7 @@ def get_playlists(playlist_id):
 
 
 def generate(exclusions, seeds, target):
-    auth_manager = get_api()
-    sp = spotipy.Spotify(auth_manager=auth_manager)
+    sp = get_api()
 
     uris = []
 
@@ -76,9 +102,8 @@ def generate(exclusions, seeds, target):
 
 
 def save(playlist_id, uris):
-    auth_manager = get_api()
-    sp = spotipy.Spotify(auth_manager=auth_manager)
+    sp = get_api()
 
     for i in range(0, len(uris), 100):
         chunk = uris[i:i + 100]
-        result = sp.playlist_add_items(playlist_id=playlist_id, items=chunk)
+        sp.playlist_add_items(playlist_id=playlist_id, items=chunk)

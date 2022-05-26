@@ -1,4 +1,12 @@
 <div class="container" [formGroup]="group">
+    <div class="login">
+        <div *ngIf="(loginObs | async) as me; else auth" class="logged-in">
+            <a target="_blank" class="regular-text" [href]="me.external_urls.spotify">Logged in as {{me.display_name}}</a>
+            <button mat-flat-button class="regular-text" (click)="logout()">Sign out</button>
+        </div>
+        <ng-template #auth><button mat-flat-button (click)="doLogin()">Login</button></ng-template>
+    </div>
+
     <mat-card formGroupName="src">
         <mat-card-header>
             <mat-card-title>1. Exclusions</mat-card-title>
