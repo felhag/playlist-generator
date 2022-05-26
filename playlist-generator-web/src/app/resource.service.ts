@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface Playlist {
   id: string;
+  url: string;
   name: string;
   items: number;
 }

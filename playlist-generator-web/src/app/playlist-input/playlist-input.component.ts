@@ -1,5 +1,5 @@
 import { FocusMonitor } from '@angular/cdk/a11y';
-import { Component, OnInit, forwardRef, Injector, ElementRef, OnDestroy, HostBinding } from '@angular/core';
+import { Component, OnInit, forwardRef, Injector, ElementRef, OnDestroy, HostBinding, DoCheck } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validators, NgControl } from '@angular/forms';
 import { MatFormFieldControl } from '@angular/material/form-field';
 import { timer, of, Observable, Subject, MonoTypeOperatorFunction } from 'rxjs';
@@ -22,7 +22,7 @@ import { ResourceService, Playlist } from '../resource.service';
     }
   ]
 })
-export class PlaylistInputComponent implements OnInit, OnDestroy, ControlValueAccessor, MatFormFieldControl<string> {
+export class PlaylistInputComponent implements OnInit, OnDestroy, DoCheck, ControlValueAccessor, MatFormFieldControl<string> {
   static nextId = 0;
   @HostBinding() id = `playlist-input-${PlaylistInputComponent.nextId++}`;
   @HostBinding('class.floating') get shouldLabelFloat() { return this.focused || !this.empty; }
@@ -63,12 +63,13 @@ export class PlaylistInputComponent implements OnInit, OnDestroy, ControlValueAc
             this.state.next('error');
             return of(undefined);
           })
-        )),
-      tap(value => {
-        this.errorState = !value;
-        this.stateChanges.next();
-      }),
+        ))
     );
+  }
+
+  ngDoCheck(): void {
+    this.errorState = this.control.invalid && !!this.ngControl.touched;
+    this.stateChanges.next();
   }
 
   ngOnDestroy() {
@@ -94,7 +95,6 @@ export class PlaylistInputComponent implements OnInit, OnDestroy, ControlValueAc
       return value;
     }
   }
-
 
   setDescribedByIds(ids: string[]): void {}
   onContainerClick(event: MouseEvent): void {}

@@ -29,6 +29,7 @@ def get_playlists(playlist_id):
     items = playlist["tracks"]["items"]
     return {
         "id": playlist['id'],
+        "url": playlist['external_urls']['spotify'],
         "name": playlist['name'],
         "items": len(items),
     }
@@ -80,4 +81,4 @@ def save(playlist_id, uris):
 
     for i in range(0, len(uris), 100):
         chunk = uris[i:i + 100]
-        sp.playlist_add_items(playlist_id=playlist_id, items=chunk)
+        result = sp.playlist_add_items(playlist_id=playlist_id, items=chunk)

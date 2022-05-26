@@ -15,7 +15,7 @@
         </mat-chip>
     </ng-container>
     <mat-chip *ngIf="playlist | async as s" [hidden]="!!(state | async)">
-        {{s.name}} ({{s.items}} tracks)
+        <a target="_blank" class="regular-text" [href]="s.url"> {{s.name}} ({{s.items}} tracks) </a>
         <button matChipRemove (click)="clear()">
             <mat-icon>cancel</mat-icon>
         </button>

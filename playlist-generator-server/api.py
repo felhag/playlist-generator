@@ -1,4 +1,3 @@
-import http
 import os
 
 from flask import Flask, request
@@ -68,7 +67,7 @@ def playlists(playlist_id):
 @app.route('/api/generate', methods=['POST'])
 def generate():
     data = request.get_json()
-    seeds = data.get('seeds')
+    seeds = [data.get('seed')]
     username = data.get('username')
 
     exclusions = list(map(lambda t: (t['artist'].lower(), t['track'].lower()), lastfm.get_exclusions(username)))
@@ -82,9 +81,9 @@ def persist():
     pid = str(data.get('playlist_id'))
     playlist_id = pid if not pid.startswith('https://') else pid.split('/')[-1].split('?')[0]
 
-    spotify.save(uris, playlist_id)
+    spotify.save(playlist_id, uris)
 
-    return '', http.HTTPStatus.NO_CONTENT
+    return spotify.get_playlists(playlist_id)
 
 
 '''
