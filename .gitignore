@@ -7,3 +7,4 @@
 /playlist-generator-server/.cache
 /playlist-generator-web/node_modules
 /playlist-generator-web/.angular/
+/playlist-generator-web/dist/
