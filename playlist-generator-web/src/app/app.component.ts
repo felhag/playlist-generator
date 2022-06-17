@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, Subject } from 'rxjs';
@@ -22,12 +22,12 @@ export class AppComponent implements OnInit {
 
   baseUrl = '/api';
 
-  group = new FormGroup({
-    src: new FormGroup({
-      username: new FormControl('', Validators.required),
-      seed: new FormControl('', Validators.required),
+  group = new UntypedFormGroup({
+    src: new UntypedFormGroup({
+      username: new UntypedFormControl('', Validators.required),
+      seed: new UntypedFormControl('', Validators.required),
     }),
-    target: new FormControl('', Validators.required)
+    target: new UntypedFormControl('', Validators.required)
   });
 
   constructor(private resource: ResourceService, private snackbar: MatSnackBar) {
@@ -61,7 +61,7 @@ export class AppComponent implements OnInit {
   }
 
   persist() {
-    const target = this.group.controls.target as FormControl;
+    const target = this.group.controls.target as UntypedFormControl;
     if (!target.valid || !this.selection.hasValue()) {
       target.markAsTouched();
       return;
@@ -88,7 +88,7 @@ export class AppComponent implements OnInit {
     return `https://www.last.fm/user/${this.srcGroup.controls.username.value}/library/music/${encodeURIComponent(elem.artist)}`
   }
 
-  private get srcGroup(): FormGroup {
-    return this.group.controls.src as FormGroup;
+  private get srcGroup(): UntypedFormGroup {
+    return this.group.controls.src as UntypedFormGroup;
   }
 }

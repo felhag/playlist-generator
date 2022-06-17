@@ -1,6 +1,6 @@
 import { FocusMonitor } from '@angular/cdk/a11y';
 import { Component, OnInit, forwardRef, Injector, ElementRef, OnDestroy, HostBinding, DoCheck } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validators, NgControl } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormControl, Validators, NgControl } from '@angular/forms';
 import { MatFormFieldControl } from '@angular/material/form-field';
 import { timer, of, Observable, Subject, MonoTypeOperatorFunction } from 'rxjs';
 import { debounce, map, switchMap, tap, catchError } from 'rxjs/operators';
@@ -29,7 +29,7 @@ export class PlaylistInputComponent implements OnInit, OnDestroy, DoCheck, Contr
 
   playlist!: Observable<Playlist | undefined>;
   state = new Subject<'loading' | 'error' | undefined>();
-  control = new FormControl('', Validators.required);
+  control = new UntypedFormControl('', Validators.required);
 
   stateChanges = new Subject<void>();
   placeholder = 'https://open.spotify.com/playlist/5vuKhUOZnI5PUv0E7VU68C?si=641c39a10f1d491a';
